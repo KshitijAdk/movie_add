@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movies</title>
+  <style>
+    body {
+      background-color: #1e99e5;
+    }
+
+    .movieLists {
+      padding-top: 10px;
+    }
+
+    .movie {
+      padding: 10px;
+      background-color: gray;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .deleteBtn {
+      padding: 5px;
+      background-color: red;
+      color: white;
+    }
+
+    .updateBtn {
+      padding: 5px;
+      background-color: green;
+      color: white;
+    }
+
+    #movieForm {
+      background-color: rgb(45, 191, 191);
+      width: 30%;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 5px 20px 20px;
+      border-radius: 20px;
+      margin-left: 40px;
+    }
+
+    input {
+      border-radius: 5px;
+    }
+
+    h1 {
+      font-family: cursive;
+      margin-left: 20px;
+    }
+
+    #title,
+    #genre,
+    #director,
+    #release {
+      padding: 5px;
+      margin: 10px;
+    }
+
+    .btn {
+      padding: 8px;
+      border-radius: 15px;
+      color: white;
+      background-color: rgb(26, 25, 25);
+    }
+
+    .btn:hover {
+      color: white;
+      background-color: rgb(116, 109, 109);
+
+    }
+  </style>
+</head>
+
+<body>
+  <form id="movieForm">
+    <h1 id="topic">Add Movies Here!!!</h1>
+    <div>
+      <label>Title :</label>
+      <input type="text" name="title" id="title" />
+    </div>
+    <div>
+      <label>Genre :</label>
+      <input type="text" name="genre" id="genre" />
+    </div>
+    <div>
+      <label>Director :</label>
+      <input type="text" name="director" id="director" />
+    </div>
+    <div>
+      <label>Release Year :</label>
+      <input type="text" name="release" id="release" />
+    </div>
+    <button type="submit" class="btn">Add movie</button>
+  </form>
+  <h1>Movies</h1>
+  <div id="movieLists"></div>
+  <script>
+    const URL = "http://localhost:3000/movies";
+
+    function deleteMovie(id) {
+      fetch(`${URL}/${id}`, {
+        method: "DELETE",
+      })
+        .then((response) => {
+          if (response.ok) {
+            fetchMovies();
+          } else {
+            throw new Error("Error deleting movie");
+          }
+        })
+        .catch((err) => {
+          console.log("Error Deleting", err);
+        });
+    }
+
+    function fetchMovies() {
+      fetch(URL)
+        .then((response) => response.json())
+        .then((movies) => {
+          const movieLists = document.getElementById("movieLists");
+          movieLists.innerHTML = ""; // Clear existing movie list
+
+          movies.forEach((movie) => {
+            let movieElem = createMovieElement(movie);
+            movieLists.appendChild(movieElem);
+          });
+        });
+    }
+
+    function createMovieElement(movie) {
+      let movieElem = document.createElement("div");
+      movieElem.setAttribute("class", "movie");
+
+      let headingElem = document.createElement("h1");
+      headingElem.innerText = movie.title;
+      movieElem.appendChild(headingElem);
+
+      let spanElem = document.createElement("span");
+      spanElem.innerText = "Directed By: " + movie.director;
+      movieElem.appendChild(spanElem);
+
+      let deleteBtn = document.createElement("button");
+      deleteBtn.setAttribute("class", "deleteBtn");
+      deleteBtn.innerText = "Delete";
+      deleteBtn.addEventListener("click", () => {
+        deleteMovie(movie.id);
+      });
+      movieElem.appendChild(deleteBtn);
+
+      let updateBtn = document.createElement("button");
+      updateBtn.setAttribute("class", "updateBtn");
+      updateBtn.innerText = "Update";
+      updateBtn.addEventListener("click", () => {
+        updateMovie(movie.id);
+      });
+      movieElem.appendChild(updateBtn);
+
+      return movieElem;
+    }
+
+    function addMovie(title, genre, director, release) {
+      const data = {
+        title: title,
+        genre: genre,
+        director: director,
+        releaseYear: release,
+      };
+
+      fetch(URL, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("data", data);
+          fetchMovies();
+        });
+    }
+
+    document.getElementById("movieForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const title = e.target.title.value;
+      const genre = e.target.genre.value;
+      const releaseYear = e.target.release.value;
+      const director = e.target.director.value;
+
+      addMovie(title, genre, director, releaseYear);
+
+      // Reset the form after adding the movie
+      e.target.reset();
+    });
+
+    fetchMovies();
+
+  </script>
+</body>
+
+</html>
